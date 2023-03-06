@@ -1,0 +1,40 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  labels:
+    service: demo-app
+    release: prometheus-operator
+  name: demo-app-slo
+  namespace: default
+spec:
+  service: demo-app-stable-svc
+  slos:
+    - alerting:
+        pageAlert:
+          disable: true
+        ticketAlert:
+          disable: true
+      description: Common SLO based on availability for HTTP request responses.
+      name: http-availability
+      objective: 99.95
+      sli:
+        plugin:
+          id: sloth-common/istio/v1/availability
+          options:
+            namespace: default
+            service: demo-app-stable-svc
+    - alerting:
+        pageAlert:
+          disable: true
+        ticketAlert:
+          disable: true
+      description: Common SLO based on latency for HTTP request responses.
+      name: http-latency
+      objective: 99.95
+      sli:
+        plugin:
+          id: sloth-common/istio/v1/latency
+          options:
+            bucket: '300'
+            namespace: default
+            service: demo-app-stable-svc

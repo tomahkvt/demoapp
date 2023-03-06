@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1  # Changed from apps/v1
+kind: Rollout                     # Changed from Deployment
+metadata:
+  name: demo-app
+  labels:
+    app: demo-app
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+        version: v1
+    spec:
+      serviceAccountName: demo-app
+      containers:
+      - name: demo-app
+        image: registry.demoonair.com/istio-test:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+  strategy:
+    canary:
+      analysis:
+        templates:
+        - templateName: success-rate
+        startingStep: 0
+        args:
+        - name: service-name
+          value: demo-app-canary-svc.default.svc.cluster.local
+      canaryService: demo-app-canary-svc  # required
+      stableService: demo-app-stable-svc  # required
+      trafficRouting:
+        istio:
+          virtualService:
+            name: demo-app   # required
+            routes:
+            - primary
+      steps:
+      - setWeight: 20
+      - pause: {}
+      - setWeight: 40
+      - pause: {duration: 10}
+      - setWeight: 60
+      - pause: {duration: 10}
+      - setWeight: 80
+      - pause: {duration: 10}
+

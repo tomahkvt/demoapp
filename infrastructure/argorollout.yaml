@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollouts
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: argo-rollouts
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: 'https://argoproj.github.io/argo-helm'
+    targetRevision: 2.22.2
+    chart: argo-rollouts
+    helm:
+      values: |-
+        installCRDs: true
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/preserveUnknownFields

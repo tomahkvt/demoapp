@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demoapp
+  namespace: istio-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: 'demoapp.demoonair.com'
+    http:
+      paths:
+      - backend:
+          service:
+            name: istio-ingressgateway
+            port:
+              number: 80
+        path: /
+        pathType: Prefix

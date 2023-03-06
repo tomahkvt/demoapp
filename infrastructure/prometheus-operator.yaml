@@ -1,0 +1,116 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: istio-system
+    server: "https://kubernetes.default.svc"
+  source:
+    path: ""
+    repoURL: "https://prometheus-community.github.io/helm-charts"
+    targetRevision: 35.3.1
+    chart: kube-prometheus-stack
+    helm:
+      values: |-
+        nameOverride: "prometheus-operator"
+        defaultRules:
+          create: false
+        kubeControllerManager:
+          enabled: false
+        prometheus:
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts:
+              - prometheus.demoonair.com
+            paths:
+              - /
+            pathType: Prefix
+          thanosIngress:
+            enabled: false
+            resources:
+              requests:
+                cpu: 0.1
+                memory: "1Gi"
+            retention: 5d
+        grafana:
+          image:
+            repository: grafana/grafana
+            tag: 9.1.5
+            sha: ""
+            pullPolicy: IfNotPresent
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts:
+              - grafana.demoonair.com
+            path: /
+            pathType: Prefix
+          securityContext:
+            runAsUser: 0
+            fsGroup: 0
+          sidecar:
+            imagePullPolicy: IfNotPresent
+            dashboards:
+              enabled: true
+              SCProvider: true
+              searchNamespace: ALL
+              folder: /sidecar/dashboards/
+              provider:
+                allowUiUpdates: true
+          grafana.ini:
+            dataproxy:
+              timeout: 300
+            server:
+              domain: grafana.demoonair.com
+              root_url: https://grafana.demoonair.com
+            users:
+              viewers_can_edit: false
+              editors_can_admin: true
+              auto_assign_org_role: Editor
+            auth.anonymous: 
+              enabled: true
+              org_role: Viewer
+          adminPassword: prom-operator
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 0.2
+        prometheusOperator:
+          imagePullPolicy: IfNotPresent
+          tls:
+            enabled: false
+          admissionWebhooks:
+            enabled: false
+            patch:
+              enabled: false
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+        kubelet:
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 0.05
+            limits:
+              memory: 128Mi
+              cpu: 0.2
+        prometheus-node-exporter:
+          resources:
+            requests:
+              memory: 16Mi
+              cpu: "10m"
+            limits:
+              memory: 64Mi
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

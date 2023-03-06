@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sloth
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: istio-system
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: https://slok.github.io/sloth
+    targetRevision: 0.5.2
+    chart: sloth
+    helm:
+      values: |-
+        sloth:
+          workers: 1
+          namespace: default
+          extraLabels:
+            release: prometheus-operator
+        commonPlugins:
+          enabled: true
+          image:
+            repository: k8s.gcr.io/git-sync/git-sync
+            tag: v3.6.1
+          gitRepo:
+            url: https://github.com/slok/sloth-common-sli-plugins
+            branch: main
+        metrics:
+          prometheusLabels:
+            release: prometheus-operator
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

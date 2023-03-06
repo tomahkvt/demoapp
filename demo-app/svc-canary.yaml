@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-canary-svc
+  labels:
+    app: demo-app
+    service: demo-app
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: demo-app

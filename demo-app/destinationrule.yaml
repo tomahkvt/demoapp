@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: demo-app
+  labels:
+    app: demo-app
+spec:
+  host: demo-app-stable-svc
+  trafficPolicy:
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 1s
+      baseEjectionTime: 1m
+      maxEjectionPercent: 100

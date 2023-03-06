@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-egressgateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: istio-system
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: ''
+    repoURL: "https://istio-release.storage.googleapis.com/charts"
+    targetRevision: 1.17.0
+    chart: gateway
+    helm:
+      values: |-
+        global:
+          istioNamespace: istio-system       
+        service:
+          type: ClusterIP
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

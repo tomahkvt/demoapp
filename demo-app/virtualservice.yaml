@@ -1,0 +1,28 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: demo-app
+spec:
+  hosts:
+  - "demoapp.demoonair.com"
+  gateways:
+  - demo-app-gateway
+  http:
+  - name: primary
+    timeout: 500ms
+    retries:
+      attempts: 3
+      perTryTimeout: 100ms
+      retryOn: connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: demo-app-stable-svc
+        port:
+          number: 8080
+      weight: 100
+    - destination:
+        host: demo-app-canary-svc
+        port:
+          number: 8080
+      weight: 0
+
